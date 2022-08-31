@@ -4,38 +4,53 @@ const app = express();
 app.use(express.json());
 const port = 8000;
 
-app.get("/", (req, res) => {
-  res.send("OK");
+const { v4 } = require("uuid");
+
+const projects = [];
+
+app.get("/project", (req, res) => {
+  return res.json(projects);
 });
 
-app.get("/api", (req, res) => {
-  res.send("api is working");
+app.post("/project", (req, res) => {
+  const { name, language } = req.body;
+
+  const project = {
+    id: v4(),
+    name,
+    language,
+  };
+
+  projects.push(project);
+
+  return res.status(201).json(project);
 });
 
-app.get("/api/:id", (req, res) => {
-  res.send("with id " + req.params.id);
+app.put("/project/:id", (req, res) => {
+  const { id } = req.params;
+  const { name, language } = req.body;
+
+  const newProject = {
+    id,
+    name,
+    language,
+  };
+
+  const projectIndex = projects.findIndex((project) => project.id === id);
+
+  projects[projectIndex] = newProject;
+
+  return res.json(newProject);
 });
 
-app.get("/api/:user/:id", (req, res) => {
-  res.send("user with id " + req.params.id);
-});
+app.delete("/project/:id", (req, res) => {
+  const { id } = req.params;
 
-app.get("/register", (req, res) => {
-  const name = req.query["name"];
-  if (name) {
-    res.send("user name: " + req.query.name);
-  } else {
-    res.send("no name was passed");
-  }
-});
+  const projectIndex = projects.findIndex((project) => project.id === id);
 
-app.get("/contact", (req, res) => {
-  const phone = req.query["phone"];
-  if (phone) {
-    res.send("contact phone: " + req.query.phone);
-  } else {
-    res.send("no phone was passed");
-  }
+  projects.splice(projectIndex, 1);
+
+  return res.status(204).send();
 });
 
 app.listen(port, () => {
