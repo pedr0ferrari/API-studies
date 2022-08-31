@@ -4,9 +4,28 @@ const app = express();
 app.use(express.json());
 const port = 8000;
 
-const { v4 } = require("uuid");
+const { v4, validate } = require("uuid");
 
 const projects = [];
+
+function logRequest(req, res, next) {
+  console.time(req.method + " - " + req.url);
+
+  next();
+
+  console.timeEnd(req.method + " - " + req.url);
+}
+
+function checkId(req, res, next) {
+  const { id } = req.params;
+  if (!validate(id)) {
+    return res.status(400).json({ message: "Project not found!" });
+  } else {
+    next();
+  }
+}
+
+app.use(logRequest);
 
 app.get("/project", (req, res) => {
   return res.json(projects);
@@ -26,7 +45,7 @@ app.post("/project", (req, res) => {
   return res.status(201).json(project);
 });
 
-app.put("/project/:id", (req, res) => {
+app.put("/project/:id", checkId, (req, res) => {
   const { id } = req.params;
   const { name, language } = req.body;
 
@@ -43,7 +62,7 @@ app.put("/project/:id", (req, res) => {
   return res.json(newProject);
 });
 
-app.delete("/project/:id", (req, res) => {
+app.delete("/project/:id", checkId, (req, res) => {
   const { id } = req.params;
 
   const projectIndex = projects.findIndex((project) => project.id === id);
